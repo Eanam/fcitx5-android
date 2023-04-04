@@ -20,7 +20,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 if (DEFINED ENV{ECM_DIR})
     set(ECM_DIR $ENV{ECM_DIR})
 else ()
-    set(ECM_DIR /usr/share/ECM/cmake)
+    set(ECM_DIR /usr/local/Cellar/extra-cmake-modules/5.104.0/share/ECM/cmake)
 endif ()
 
 set(PREBUILT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/prebuilt")

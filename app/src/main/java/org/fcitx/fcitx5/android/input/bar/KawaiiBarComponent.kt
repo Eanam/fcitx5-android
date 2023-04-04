@@ -40,6 +40,7 @@ import org.fcitx.fcitx5.android.input.dependency.context
 import org.fcitx.fcitx5.android.input.dependency.inputMethodService
 import org.fcitx.fcitx5.android.input.dependency.theme
 import org.fcitx.fcitx5.android.input.editing.TextEditingWindow
+import org.fcitx.fcitx5.android.input.generate.GenerateWindow
 import org.fcitx.fcitx5.android.input.keyboard.CommonKeyActionListener
 import org.fcitx.fcitx5.android.input.keyboard.KeyboardWindow
 import org.fcitx.fcitx5.android.input.popup.PopupComponent
@@ -175,7 +176,9 @@ class KawaiiBarComponent : UniqueViewComponent<KawaiiBarComponent, FrameLayout>(
                     windowManager.attachWindow(TextEditingWindow())
                 }
                 clipboardButton.setOnClickListener {
-                    windowManager.attachWindow(ClipboardWindow())
+//                    windowManager.attachWindow(ClipboardWindow())
+                    //TODO: TEST
+                    windowManager.attachWindow(GenerateWindow())
                 }
                 moreButton.setOnClickListener {
                     windowManager.attachWindow(StatusAreaWindow())
