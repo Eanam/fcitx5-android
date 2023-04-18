@@ -11,10 +11,7 @@ import org.fcitx.fcitx5.android.R
 import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.data.theme.Theme
 import org.fcitx.fcitx5.android.input.bar.KawaiiBarComponent
-import org.fcitx.fcitx5.android.input.bar.ui.idle.ButtonsBarUi
-import org.fcitx.fcitx5.android.input.bar.ui.idle.ClipboardSuggestionUi
-import org.fcitx.fcitx5.android.input.bar.ui.idle.InlineSuggestionsUi
-import org.fcitx.fcitx5.android.input.bar.ui.idle.NumberRow
+import org.fcitx.fcitx5.android.input.bar.ui.idle.*
 import org.fcitx.fcitx5.android.input.keyboard.CommonKeyActionListener
 import org.fcitx.fcitx5.android.input.popup.PopupComponent
 import splitties.dimensions.dp
@@ -34,7 +31,7 @@ class IdleUi(
 ) : Ui {
 
     enum class State {
-        Empty, Toolbar, Clipboard, NumberRow, InlineSuggestion
+        Empty, Toolbar, Clipboard, NumberRow, InlineSuggestion, IntelligentBar
     }
 
     var currentState = State.Empty
@@ -47,7 +44,7 @@ class IdleUi(
     private val menuButtonRotation
         get() = when {
             inPrivate -> 0f
-            currentState == State.Toolbar -> 90f
+            currentState == State.Toolbar || currentState == State.IntelligentBar -> 90f
             else -> -90f
         }
 
@@ -63,6 +60,8 @@ class IdleUi(
 
     val clipboardUi = ClipboardSuggestionUi(ctx, theme)
 
+    val intelligentBarUi = IntelligentBarUi(ctx, theme)
+
     val numberRow = NumberRow(ctx, theme).apply {
         visibility = View.GONE
     }
@@ -74,6 +73,7 @@ class IdleUi(
         add(buttonsUi.root, lParams(matchParent, matchParent))
         add(clipboardUi.root, lParams(matchParent, matchParent))
         add(inlineSuggestionsBar.root, lParams(matchParent, matchParent))
+        add(intelligentBarUi.root, lParams(matchParent, matchParent))
     }
 
     private val inAnimation by lazy {
@@ -162,6 +162,7 @@ class IdleUi(
             State.Clipboard -> animator.displayedChild = 2
             State.NumberRow -> {}
             State.InlineSuggestion -> animator.displayedChild = 3
+            State.IntelligentBar -> animator.displayedChild = 4
         }
         if (state == State.NumberRow) {
             menuButton.visibility = View.GONE

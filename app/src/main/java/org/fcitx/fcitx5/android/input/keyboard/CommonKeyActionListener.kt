@@ -53,9 +53,16 @@ class CommonKeyActionListener :
         }
     }
 
+    private val subListeners: MutableList<ProxyKeyActionListener> = mutableListOf()
+
+
+
     val listener by lazy {
         KeyActionListener { action, _ ->
             service.lifecycleScope.launchOnFcitxReady(fcitx) {
+                for (i in subListeners.indices) {
+                    if (subListeners[i].onKeyAction(action)) return@launchOnFcitxReady
+                }
                 when (action) {
                     is FcitxKeyAction -> it.sendKey(action.act, KeyState.Virtual.state)
                     is SymAction -> it.sendKey(action.sym, action.states)
@@ -118,12 +125,12 @@ class CommonKeyActionListener :
                     }
                     is SpaceLongPressAction -> {
                         when (AppPrefs.getInstance().keyboard.spaceKeyLongPressBehavior.getValue()) {
-                            SpaceLongPressBehavior.None -> {}
                             SpaceLongPressBehavior.Enumerate -> it.enumerateIme()
                             SpaceLongPressBehavior.ToggleActivate -> it.toggleIme()
                             SpaceLongPressBehavior.ShowPicker -> inputView.showDialog(
                                 InputMethodPickerDialog.build(it, service, context)
                             )
+                            else -> {}
                         }
                     }
                     else -> {
@@ -131,5 +138,18 @@ class CommonKeyActionListener :
                 }
             }
         }
+    }
+
+    fun addProxyKeyActionListener(proxyKeyActionListener: ProxyKeyActionListener) {
+        subListeners.add(proxyKeyActionListener)
+    }
+
+    fun removeProxyKeyActionListener(proxyKeyActionListener: ProxyKeyActionListener) {
+        subListeners.remove(proxyKeyActionListener)
+    }
+
+
+    interface ProxyKeyActionListener {
+        fun onKeyAction(action: KeyAction): Boolean
     }
 }

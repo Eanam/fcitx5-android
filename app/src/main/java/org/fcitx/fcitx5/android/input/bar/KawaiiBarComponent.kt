@@ -42,7 +42,9 @@ import org.fcitx.fcitx5.android.input.dependency.theme
 import org.fcitx.fcitx5.android.input.editing.TextEditingWindow
 import org.fcitx.fcitx5.android.input.generate.GenerateWindow
 import org.fcitx.fcitx5.android.input.keyboard.CommonKeyActionListener
+import org.fcitx.fcitx5.android.input.keyboard.KeyAction
 import org.fcitx.fcitx5.android.input.keyboard.KeyboardWindow
+import org.fcitx.fcitx5.android.input.keyboard.SpaceLongPressBehavior
 import org.fcitx.fcitx5.android.input.popup.PopupComponent
 import org.fcitx.fcitx5.android.input.status.StatusAreaWindow
 import org.fcitx.fcitx5.android.input.wm.InputWindow
@@ -57,6 +59,7 @@ import splitties.views.dsl.core.add
 import splitties.views.dsl.core.lParams
 import splitties.views.dsl.core.matchParent
 import splitties.views.imageResource
+import timber.log.Timber
 import java.util.concurrent.Executor
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -77,6 +80,7 @@ class KawaiiBarComponent : UniqueViewComponent<KawaiiBarComponent, FrameLayout>(
     private val expandedCandidateStyle by AppPrefs.getInstance().keyboard.expandedCandidateStyle
     private val expandToolbarByDefault by AppPrefs.getInstance().keyboard.expandToolbarByDefault
     private val toolbarNumRowOnPassword by AppPrefs.getInstance().keyboard.toolbarNumRowOnPassword
+    private var hasOpenIntelligentMode by AppPrefs.getInstance().keyboard.hasOpenIntelligentMode
 
     private var clipboardTimeoutJob: Job? = null
 
@@ -140,22 +144,43 @@ class KawaiiBarComponent : UniqueViewComponent<KawaiiBarComponent, FrameLayout>(
             !isClipboardFresh -> IdleUi.State.Clipboard
             !isInlineSuggestionEmpty -> IdleUi.State.InlineSuggestion
             isCapabilityFlagsPassword && !isKeyboardLayoutNumber -> IdleUi.State.NumberRow
-            expandToolbarByDefault || isToolbarManuallyExpanded -> IdleUi.State.Toolbar
+            expandToolbarByDefault || isToolbarManuallyExpanded -> {
+                if (hasOpenIntelligentMode) {
+                    IdleUi.State.IntelligentBar
+                }else {
+                    IdleUi.State.Toolbar
+                }
+            }
             else -> IdleUi.State.Empty
         }
+        Timber.tag("KawaiiBar").d("newUiState is $newState")
         if (newState == idleUi.currentState) return
         idleUi.updateState(newState, fromUser)
     }
 
     private val idleUi: IdleUi by lazy {
+        commonKeyActionListener.addProxyKeyActionListener(object: CommonKeyActionListener.ProxyKeyActionListener {
+            override fun onKeyAction(action: KeyAction): Boolean {
+                if (action == KeyAction.SpaceLongPressAction
+                    && AppPrefs.getInstance().keyboard.spaceKeyLongPressBehavior.getValue() == SpaceLongPressBehavior.ToggleIntelligentTool) {
+                    hasOpenIntelligentMode = !hasOpenIntelligentMode
+                    Timber.tag("KawaiiBar").d("changeIntelligentModeSwitch -> $hasOpenIntelligentMode")
+                    return true
+                }
+                return false
+            }
+        })
         IdleUi(context, theme, popup, commonKeyActionListener).apply {
             menuButton.setOnClickListener {
-                if (idleUi.currentState == IdleUi.State.Toolbar) {
+                if (idleUi.currentState == IdleUi.State.Toolbar || idleUi.currentState == IdleUi.State.IntelligentBar) {
                     isToolbarManuallyExpanded = false
                     evalIdleUiState(fromUser = true)
                 } else {
                     isToolbarManuallyExpanded = true
-                    idleUi.updateState(IdleUi.State.Toolbar, fromUser = true)
+                    idleUi.updateState(
+                        if (hasOpenIntelligentMode) IdleUi.State.IntelligentBar else IdleUi.State.Toolbar,
+                        fromUser = true
+                    )
                 }
                 // reset timeout timer (if present) when user switch layout
                 if (clipboardTimeoutJob != null) {
@@ -176,12 +201,15 @@ class KawaiiBarComponent : UniqueViewComponent<KawaiiBarComponent, FrameLayout>(
                     windowManager.attachWindow(TextEditingWindow())
                 }
                 clipboardButton.setOnClickListener {
-//                    windowManager.attachWindow(ClipboardWindow())
-                    //TODO: TEST
-                    windowManager.attachWindow(GenerateWindow())
+                    windowManager.attachWindow(ClipboardWindow())
                 }
                 moreButton.setOnClickListener {
                     windowManager.attachWindow(StatusAreaWindow())
+                }
+            }
+            intelligentBarUi.apply {
+                copyAndGenerateAnswerButton.setOnClickListener {
+                    windowManager.attachWindow(GenerateWindow())
                 }
             }
             clipboardUi.suggestionView.apply {

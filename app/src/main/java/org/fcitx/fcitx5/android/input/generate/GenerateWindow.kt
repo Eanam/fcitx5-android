@@ -1,49 +1,91 @@
 package org.fcitx.fcitx5.android.input.generate
 
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import org.fcitx.fcitx5.android.data.clipboard.ClipboardManager
 import org.fcitx.fcitx5.android.input.FcitxInputMethodService
 import org.fcitx.fcitx5.android.input.dependency.inputMethodService
 import org.fcitx.fcitx5.android.input.dependency.theme
-import org.fcitx.fcitx5.android.input.generate.data.GenerateContentEntity
-import org.fcitx.fcitx5.android.input.generate.model.GenerateContentRepo
+import org.fcitx.fcitx5.android.input.generate.data.AdviceResponse
+import org.fcitx.fcitx5.android.input.generate.data.FraudResponse
+import org.fcitx.fcitx5.android.input.generate.model.GenerateContentSource
 import org.fcitx.fcitx5.android.input.wm.InputWindow
+import timber.log.Timber
 
 class GenerateWindow: InputWindow.ExtendedInputWindow<GenerateWindow>() {
 
+    companion object {
+        private const val TAG = "GenerateWindow"
+    }
+
     private val service: FcitxInputMethodService by manager.inputMethodService()
     private val theme by manager.theme()
-    private val adapter by lazy { GenerateContentAdapter(theme) }
-    private val ui by lazy {
-        GenerateUi(context, theme).apply {
-            recyclerView.apply {
-                layoutManager = LinearLayoutManager(this@GenerateWindow.context, RecyclerView.VERTICAL, false)
-                adapter = this@GenerateWindow.adapter
-            }
-        }
-    }
-    private val generateContentPager by lazy {
-        val repo = GenerateContentRepo()
-        Pager(PagingConfig(pageSize = 3)) { repo }
-    }
-    private var pagerJob: Job? = null
+    private val ui by lazy { GenerateUi(context, theme) }
+    private var clipboardContent = ClipboardManager.lastEntry?.text ?: ""
+    private var reqJob: Job? = null
+    private var listenJob: Job? = null
+    private val source by lazy { GenerateContentSource() }
+
+    override val title: String = "复制回答"
 
     override fun onCreateView() = ui.root
 
     override fun onAttached() {
-        pagerJob = generateContentPager.flow.onEach {
-            adapter.submitData(it)
-        }.launchIn(service.lifecycleScope)
+        val initState = if (clipboardContent.isBlank()) {
+            GenerateUiState.NotCopiedYet
+        }else {
+            GenerateUiState.HasCopiedContent(clipboardContent)
+        }
+
+        ui.switchUiByState(initState)
+
+        if (initState is GenerateUiState.HasCopiedContent) {
+            //先监听状态变化，避免错过
+            listenJob = service.lifecycleScope.launch(Dispatchers.Main) {
+                source.sourceState.collectLatest {
+                    onGenerateContentSourceUpdated(it)
+                }
+            }
+            reqJob = service.lifecycleScope.launch(Dispatchers.IO) {
+                source.loadAnswersFor(initState.copiedContent)
+            }
+        }
     }
 
     override fun onDetached() {
-        pagerJob?.cancel()
-        pagerJob = null
+        reqJob?.cancel()
+        reqJob = null
+        listenJob?.cancel()
+        listenJob = null
+    }
+
+    private fun onGenerateContentSourceUpdated(state: GenerateContentSource.State) {
+        Timber.tag(TAG).d("onGenerateContentSourceUpdated -> ${state.javaClass.simpleName}")
+        var uiState: GenerateUiState? = null
+        when(state) {
+            is GenerateContentSource.State.Loading -> {
+                uiState = GenerateUiState.LoadingAnswers(state.message)
+            }
+            is GenerateContentSource.State.Done -> {
+                when(val response = state.response) {
+                    is FraudResponse -> {
+                        uiState = GenerateUiState.FraudMessageConfirmed(state.message, response)
+                    }
+                    is AdviceResponse -> {
+                        uiState = GenerateUiState.AdvicesConfirmed(state.message, response)
+                    }
+                }
+            }
+            is GenerateContentSource.State.ApiError -> {
+                uiState = GenerateUiState.ApiError(state.error)
+            }
+        }
+
+        uiState?.let {
+            ui.switchUiByState(it)
+        }
     }
 }

@@ -2,6 +2,7 @@ package org.fcitx.fcitx5.android.input.keyboard
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.view.View
 import androidx.core.view.allViews
 import org.fcitx.fcitx5.android.R
@@ -71,6 +72,8 @@ class TextKeyboard(
         )
     }
 
+    private var onIntelligentModePrefChangeListener: ManagedPreference.OnChangeListener<Boolean>? = null
+
     val caps: ImageKeyView by lazy { findViewById(R.id.button_caps) }
     val backspace: ImageKeyView by lazy { findViewById(R.id.button_backspace) }
     val quickphrase: ImageKeyView by lazy { findViewById(R.id.button_quickphrase) }
@@ -92,6 +95,23 @@ class TextKeyboard(
         updateLangSwitchKey(showLangSwitchKey.getValue())
         showLangSwitchKey.registerOnChangeListener(showLangSwitchKeyListener)
         keepLettersUppercase.registerOnChangeListener(keepLettersUppercaseListener)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        onIntelligentModePrefChangeListener = ManagedPreference.OnChangeListener<Boolean> { key, value ->
+            updateSpaceTextWhenInIntelligentMode()
+        }.also {
+            AppPrefs.getInstance().keyboard.hasOpenIntelligentMode.registerOnChangeListener(it)
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        onIntelligentModePrefChangeListener?.let {
+            AppPrefs.getInstance().keyboard.hasOpenIntelligentMode.unregisterOnChangeListener(it)
+        }
+        onIntelligentModePrefChangeListener = null
     }
 
     private val textKeys: List<TextKeyView> by lazy {
@@ -151,6 +171,7 @@ class TextKeyboard(
     }
 
     override fun onInputMethodUpdate(ime: InputMethodEntry) {
+        if (updateSpaceTextWhenInIntelligentMode()) return
         space.mainText.text = buildString {
             append(ime.displayName)
             ime.subMode.run { label.ifEmpty { name.ifEmpty { null } } }?.let { append(" ($it)") }
@@ -182,6 +203,18 @@ class TextKeyboard(
         }
         updateCapsButtonIcon()
         updateAlphabetKeys()
+    }
+
+    private fun updateSpaceTextWhenInIntelligentMode(): Boolean {
+        if (AppPrefs.getInstance().keyboard.spaceKeyLongPressBehavior.getValue() != SpaceLongPressBehavior.ToggleIntelligentTool) return false
+        space.mainText.setText(
+            if (AppPrefs.getInstance().keyboard.hasOpenIntelligentMode.getValue()) {
+                R.string.close_intelligent_mode
+            }else {
+                R.string.open_intelligent_mode
+            }
+        )
+        return true
     }
 
     private fun updateCapsButtonIcon() {

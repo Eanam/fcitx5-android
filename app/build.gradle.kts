@@ -348,6 +348,10 @@ dependencies {
     androidTestImplementation("androidx.test:rules:1.5.0")
     androidTestImplementation("androidx.lifecycle:lifecycle-runtime-testing:2.5.1")
     androidTestImplementation("junit:junit:4.13.2")
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.github.AppcentMobile:ACMOpenAI-Android:1.0.2")
 }
 
 abstract class DataDescriptorTask : DefaultTask() {

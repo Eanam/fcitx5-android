@@ -10,6 +10,7 @@ import org.fcitx.fcitx5.android.input.keyboard.SwipeSymbolDirection
 import org.fcitx.fcitx5.android.input.picker.PickerWindow
 import org.fcitx.fcitx5.android.utils.getSystemProperty
 import splitties.systemservices.vibrator
+import timber.log.Timber
 
 class AppPrefs(private val sharedPreferences: SharedPreferences) {
 
@@ -121,19 +122,21 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
         val spaceKeyLongPressBehavior = list(
             R.string.space_long_press_behavior,
             "space_long_press_behavior",
-            SpaceLongPressBehavior.None,
+            SpaceLongPressBehavior.ToggleIntelligentTool,
             SpaceLongPressBehavior,
             listOf(
                 SpaceLongPressBehavior.None,
                 SpaceLongPressBehavior.Enumerate,
                 SpaceLongPressBehavior.ToggleActivate,
-                SpaceLongPressBehavior.ShowPicker
+                SpaceLongPressBehavior.ShowPicker,
+                SpaceLongPressBehavior.ToggleIntelligentTool
             ),
             listOf(
                 R.string.space_behavior_none,
                 R.string.space_behavior_enumerate,
                 R.string.space_behavior_activate,
-                R.string.space_behavior_picker
+                R.string.space_behavior_picker,
+                R.string.space_behavior_intelligent_mode
             )
         )
         val showLangSwitchKey =
@@ -251,6 +254,15 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
             expandedCandidateGridSpanCountLandscape = secondary
         }
 
+
+        val hasOpenIntelligentMode: ManagedPreference.PBool = ManagedPreference.PBool(
+            sharedPreferences,
+            "has_open_intelligent_mode",
+            false
+        ).apply {
+            register()
+        }
+
     }
 
     inner class Clipboard : ManagedPreferenceCategory(R.string.clipboard, sharedPreferences) {
@@ -294,6 +306,7 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
 
     private val onSharedPreferenceChangeListener =
         SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            Timber.tag("AppPrefs").d("onSharedPreferenceChangeListener -> $key changed")
             providers.forEach {
                 it.managedPreferences[key]?.apply {
                     fireChange()
