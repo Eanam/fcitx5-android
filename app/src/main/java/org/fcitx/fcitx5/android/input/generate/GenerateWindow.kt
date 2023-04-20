@@ -11,6 +11,8 @@ import org.fcitx.fcitx5.android.input.dependency.inputMethodService
 import org.fcitx.fcitx5.android.input.dependency.theme
 import org.fcitx.fcitx5.android.input.generate.data.AdviceResponse
 import org.fcitx.fcitx5.android.input.generate.data.FraudResponse
+import org.fcitx.fcitx5.android.input.generate.model.ADVICE_FOR_OLD_MAN_PROMPT
+import org.fcitx.fcitx5.android.input.generate.model.FRAUD_PROMPT
 import org.fcitx.fcitx5.android.input.generate.model.GenerateContentSource
 import org.fcitx.fcitx5.android.input.wm.InputWindow
 import timber.log.Timber
@@ -23,7 +25,11 @@ class GenerateWindow: InputWindow.ExtendedInputWindow<GenerateWindow>() {
 
     private val service: FcitxInputMethodService by manager.inputMethodService()
     private val theme by manager.theme()
-    private val ui by lazy { GenerateUi(context, theme) }
+    private val ui by lazy {
+        GenerateUi(context, theme) { content: String ->
+            service.commitText(content)
+        }
+    }
     private var clipboardContent = ClipboardManager.lastEntry?.text ?: ""
     private var reqJob: Job? = null
     private var listenJob: Job? = null
@@ -50,7 +56,7 @@ class GenerateWindow: InputWindow.ExtendedInputWindow<GenerateWindow>() {
                 }
             }
             reqJob = service.lifecycleScope.launch(Dispatchers.IO) {
-                source.loadAnswersFor(initState.copiedContent)
+                source.loadAnswersFor(initState.copiedContent, FRAUD_PROMPT, ADVICE_FOR_OLD_MAN_PROMPT)
             }
         }
     }

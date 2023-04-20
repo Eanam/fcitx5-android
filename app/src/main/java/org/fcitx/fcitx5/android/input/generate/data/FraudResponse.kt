@@ -6,5 +6,5 @@ data class FraudResponse(
     @SerializedName("is_scam") val isScam: Boolean,
     @SerializedName("percentage") val percentage: String,
     @SerializedName("reason") val reason: String,
-    @SerializedName("advices") val advices: List<String>
+    @SerializedName("replies") val replies: List<String>
 ): IGenerateContentResponse

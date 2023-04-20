@@ -23,25 +23,34 @@ class GenerateRepository {
     }
 
     private val url = "https://api.openai.cztcode.com/v1"
-    private val token1 = "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"
-    private val token2 = "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"
-    private val myChatApi by lazy {
+    private val fraudPromptToken = "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"
+    private val advicesPromptToken = "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"
+    private val fraudApi by lazy {
         MyChatApi().apply {
-            initApiClient(MyChatApiClient(baseUrl = url, apiKey = token1))
+            initApiClient(MyChatApiClient(baseUrl = url, apiKey = fraudPromptToken))
+        }
+    }
+    private val advicesApi by lazy {
+        MyChatApi().apply {
+            initApiClient(MyChatApiClient(baseUrl = url, apiKey = advicesPromptToken))
         }
     }
 
-    suspend fun fetchGeneratedContent(message: String): IGenerateContentResponse? {
+    suspend fun fetchGeneratedContent(
+        message: String,
+        fraudPrompt: String,
+        advicesPrompt: String
+    ): IGenerateContentResponse? {
         Timber.tag(TAG).d("fetchGeneratedContent: start -> $message")
         return withContext(Dispatchers.IO) {
             //先判断是否是诈骗短信
-            val rawFraudResponse = myChatApi.createMyChatCompletion(
+            val rawFraudResponse = fraudApi.createMyChatCompletion(
                 CreateChatCompletionRequest(
                     model = "gpt-3.5-turbo",
                     messages = arrayOf(
                         ChatCompletionRequestMessage(
                             role = ChatCompletionRequestMessage.Role.USER.value,
-                            content = "$FRAUD_PROMPT $message"
+                            content = "$fraudPrompt $message"
                         )
                     )
                 )
@@ -56,13 +65,13 @@ class GenerateRepository {
             Timber.tag(TAG).d("This don\'t contains fraud content...")
 
             //不是诈骗短信，则给老人提示快捷回复
-            val rawAdvicesResponse = myChatApi.createMyChatCompletion(
+            val rawAdvicesResponse = advicesApi.createMyChatCompletion(
                 CreateChatCompletionRequest(
                     model = "gpt-3.5-turbo",
                     messages = arrayOf(
                         ChatCompletionRequestMessage(
                             role = ChatCompletionRequestMessage.Role.USER.value,
-                            content = "$ADVICE_FOR_OLD_MAN_PROMPT $message"
+                            content = "$advicesPrompt $message"
                         )
                     )
                 )
@@ -95,6 +104,7 @@ class GenerateRepository {
             try {
                 Gson().fromJson(content, AdviceResponse::class.java)
             }catch (e: Exception) {
+                Timber.tag(TAG).d("parseToAdvicesResponse error -> ${e.message}")
                 null
             }
         }
@@ -104,7 +114,7 @@ class GenerateRepository {
         baseUrl =  baseUrl,
         apiKey = apiKey,
         organization = null,
-        logLevel = HttpLoggingInterceptor.Level.NONE
+        logLevel = HttpLoggingInterceptor.Level.BODY
     )
     class MyChatApi: BaseApi() {
         suspend fun createMyChatCompletion(body: CreateChatCompletionRequest): CreateChatCompletionResponse? {

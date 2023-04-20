@@ -14,10 +14,14 @@ import splitties.views.dsl.constraintlayout.*
 import splitties.views.dsl.core.*
 import splitties.views.imageResource
 
-class FraudWarningUi(override val ctx: Context, private val theme: Theme): Ui {
+class FraudWarningUi(
+    override val ctx: Context,
+    private val theme: Theme,
+    private val commitContentCallback: (String) -> Unit,
+): Ui {
 
     private val titleTv = textView {
-        text = "温馨提示，此条消息回复需谨慎"
+        text = "温馨提示，此条消息需谨慎"
         setTextColor(Color.WHITE)
         textSize = 16f
         includeFontPadding = false
@@ -65,9 +69,9 @@ class FraudWarningUi(override val ctx: Context, private val theme: Theme): Ui {
             add(waringArea, lParams(matchParent, wrapContent) {
                 setMargins(dp(18), dp(12), dp(18), dp(4))
             })
-            response.advices.forEach {
+            response.replies.forEach {
                 add(
-                    GenerateContentUi(it, ctx, theme).root,
+                    GenerateContentUi(it, ctx, theme, commitContentCallback).root,
                     lParams(matchParent, wrapContent) {
                         setMargins(dp(13), dp(12), dp(13), 0)
                     }

@@ -21,10 +21,14 @@ class GenerateContentSource {
     /**
      * 时间问题，先限制一页数据
      */
-    suspend fun loadAnswersFor(message: String) {
+    suspend fun loadAnswersFor(
+        message: String,
+        fraudPrompt: String,
+        advicesPrompt: String
+    ) {
         sourceState.tryEmit(State.Loading(message))
         val newState = try {
-            val answers = repo.fetchGeneratedContent(message)
+            val answers = repo.fetchGeneratedContent(message,fraudPrompt,advicesPrompt)
             if (answers == null) {
                 State.ApiError("接口发生错误")
             }else {

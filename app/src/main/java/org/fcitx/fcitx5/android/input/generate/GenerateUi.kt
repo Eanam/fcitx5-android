@@ -12,15 +12,19 @@ import org.fcitx.fcitx5.android.input.generate.state_ui.FraudWarningUi
 import splitties.views.dsl.core.*
 import timber.log.Timber
 
-class GenerateUi(override val ctx: Context, private val theme: Theme): Ui {
+class GenerateUi(
+    override val ctx: Context,
+    private val theme: Theme,
+    private val commitContentCallback: (String) -> Unit,
+): Ui {
 
     companion object {
         private const val TAG = "GenerateUi"
     }
 
     private val emptyUi by lazy { EmptyUi(ctx, theme) }
-    private val advicesDisplayUi by lazy { AdvicesDisplayUi(ctx, theme) }
-    private val fraudWarningUi by lazy { FraudWarningUi(ctx, theme) }
+    private val advicesDisplayUi by lazy { AdvicesDisplayUi(ctx, theme, commitContentCallback) }
+    private val fraudWarningUi by lazy { FraudWarningUi(ctx, theme, commitContentCallback) }
     private val disableAnimation by AppPrefs.getInstance().advanced.disableAnimation
 
     override val root = view(::ViewAnimator) {

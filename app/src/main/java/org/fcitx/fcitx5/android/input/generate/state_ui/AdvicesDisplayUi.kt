@@ -15,7 +15,11 @@ import splitties.views.dsl.core.*
 import splitties.views.padding
 import timber.log.Timber
 
-class AdvicesDisplayUi(override val ctx: Context, private val theme: Theme): Ui {
+class AdvicesDisplayUi(
+    override val ctx: Context,
+    private val theme: Theme,
+    private val commitContentCallback: (String) -> Unit,
+): Ui {
 
     //展示复制的内容
     private val copiedContentDisplayTv = textView {
@@ -27,7 +31,7 @@ class AdvicesDisplayUi(override val ctx: Context, private val theme: Theme): Ui 
         maxWidth = dp(250)
     }
 
-    private val flexibleAreaUi = FlexibleAreaUi(ctx, theme)
+    private val flexibleAreaUi = FlexibleAreaUi(ctx, theme, commitContentCallback)
 
     override val root = constraintLayout {
         add(copiedContentDisplayTv, lParams(wrapContent, wrapContent){
@@ -53,7 +57,11 @@ class AdvicesDisplayUi(override val ctx: Context, private val theme: Theme): Ui 
     }
 
 
-    private class FlexibleAreaUi(override val ctx: Context, private val theme: Theme): Ui {
+    private class FlexibleAreaUi(
+        override val ctx: Context,
+        private val theme: Theme,
+        private val commitContentCallback: (String) -> Unit,
+    ): Ui {
 
         companion object {
             private const val TAG = "FlexibleAreaUi"
@@ -95,7 +103,7 @@ class AdvicesDisplayUi(override val ctx: Context, private val theme: Theme): Ui 
             textSize = 14f
             setTextColor(Color.BLACK)
             typeface = Typeface.defaultFromStyle(Typeface.BOLD)
-            text = "以下为推荐回复的内容"
+            text = "以下是为您推荐的内容"
         }
         private val advicesLayout = verticalLayout {
             add(advicesTitleTv, lParams(wrapContent, wrapContent) {
@@ -122,7 +130,7 @@ class AdvicesDisplayUi(override val ctx: Context, private val theme: Theme): Ui 
                     root.displayedChild = 0
                 }
                 is GenerateUiState.AdvicesConfirmed -> {
-                    updateAdvicesLayout(state.response.advices)
+                    updateAdvicesLayout(state.response.getContents())
                     root.displayedChild = 2
                 }
                 is GenerateUiState.ApiError -> {
@@ -141,7 +149,7 @@ class AdvicesDisplayUi(override val ctx: Context, private val theme: Theme): Ui 
                 })
                 advices.forEach {
                     add(
-                        GenerateContentUi(it, ctx, theme).root,
+                        GenerateContentUi(it, ctx, theme, commitContentCallback).root,
                         lParams(matchParent, wrapContent){
                             setMargins(dp(10), dp(10), dp(10), 0)
                         }

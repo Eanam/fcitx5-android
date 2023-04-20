@@ -47,6 +47,7 @@ import org.fcitx.fcitx5.android.input.keyboard.KeyboardWindow
 import org.fcitx.fcitx5.android.input.keyboard.SpaceLongPressBehavior
 import org.fcitx.fcitx5.android.input.popup.PopupComponent
 import org.fcitx.fcitx5.android.input.status.StatusAreaWindow
+import org.fcitx.fcitx5.android.input.wave.WaveInputWindow
 import org.fcitx.fcitx5.android.input.wm.InputWindow
 import org.fcitx.fcitx5.android.input.wm.InputWindowManager
 import org.fcitx.fcitx5.android.utils.AppUtil
@@ -210,6 +211,9 @@ class KawaiiBarComponent : UniqueViewComponent<KawaiiBarComponent, FrameLayout>(
             intelligentBarUi.apply {
                 copyAndGenerateAnswerButton.setOnClickListener {
                     windowManager.attachWindow(GenerateWindow())
+                }
+                inputByVoice.setOnClickListener {
+                    windowManager.attachWindow(WaveInputWindow())
                 }
             }
             clipboardUi.suggestionView.apply {

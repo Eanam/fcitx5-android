@@ -352,6 +352,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.github.AppcentMobile:ACMOpenAI-Android:1.0.2")
+    implementation("com.github.squti:Android-Wave-Recorder:1.7.0")
 }
 
 abstract class DataDescriptorTask : DefaultTask() {

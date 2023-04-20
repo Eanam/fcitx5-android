@@ -211,4 +211,7 @@
     <string name="horizontal_candidate_auto_fill">Fill width on demand</string>
     <string name="horizontal_candidate_always_fill">Always fill width</string>
     <string name="inline_suggestions">Inline suggestions</string>
+
+    <string name="before_input_wave_tips">长按语音输入</string>
+    <string name="recognize_input_wave_tips">正在识别中</string>
 </resources>

@@ -23,7 +23,7 @@ class IntelligentBarUi(override val ctx: Context, private val theme: Theme) : Ui
 
     //新工具栏按钮
     val copyAndGenerateAnswerButton = toolButton("复制回答")
-    val inputByHand = toolButton("手写输入")
     val inputByVoice = toolButton("语音输入")
+    val inputByHand = toolButton("手写输入")
     val inputByShot = toolButton("拍照识别")
 }
