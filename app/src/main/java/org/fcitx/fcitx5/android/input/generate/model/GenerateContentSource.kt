@@ -2,6 +2,7 @@ package org.fcitx.fcitx5.android.input.generate.model
 
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.input.generate.data.IGenerateContentResponse
 
 class GenerateContentSource {
@@ -26,8 +27,13 @@ class GenerateContentSource {
         fraudPrompt: String,
         advicesPrompt: String
     ) {
+        if (isReqFrequently()) {
+            sourceState.tryEmit(State.ApiError("请求过于频繁！"))
+            return
+        }
         sourceState.tryEmit(State.Loading(message))
         val newState = try {
+            updateLastReqTime()
             val answers = repo.fetchGeneratedContent(message,fraudPrompt,advicesPrompt)
             if (answers == null) {
                 State.ApiError("接口发生错误")
@@ -38,5 +44,16 @@ class GenerateContentSource {
             State.ApiError( "执行过程中发生错误: ${e.message}")
         }
         sourceState.tryEmit(newState)
+    }
+
+    private fun isReqFrequently(): Boolean {
+        val last = AppPrefs.getInstance().ai.lastAiReqTime.getValue().toLongOrNull() ?: return false
+        if (last == -1L) return false
+        if (System.currentTimeMillis() - last >= 20 * 1000) return false
+        return true
+    }
+
+    private fun updateLastReqTime() {
+        AppPrefs.getInstance().ai.lastAiReqTime.setValue(System.currentTimeMillis().toString())
     }
 }

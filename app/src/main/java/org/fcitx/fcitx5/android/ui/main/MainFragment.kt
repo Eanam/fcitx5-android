@@ -85,6 +85,14 @@ class MainFragment : PaddingPreferenceFragment() {
             }
         })
         androidCategory.addPreference(Preference(context).apply {
+            setTitle(R.string.ai)
+            setIcon(R.drawable.ic_old_man_24)
+            setOnPreferenceClickListener {
+                findNavController().navigate(R.id.action_mainFragment_to_aiSettingsFragment)
+                true
+            }
+        })
+        androidCategory.addPreference(Preference(context).apply {
             setTitle(R.string.advanced)
             setIcon(R.drawable.ic_baseline_more_horiz_24)
             setOnPreferenceClickListener {

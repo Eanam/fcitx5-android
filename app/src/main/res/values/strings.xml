@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name_release">Fcitx5 for Android</string>
-    <string name="app_name_debug">Fcitx5 for Android (Debug)</string>
+    <string name="app_name_release">老年人我爱你</string>
+    <string name="app_name_debug">老年人我爱你</string>
     <string name="save">Save</string>
     <string name="input_methods">Input Methods</string>
     <string name="add_input_method">Add Input Method</string>
@@ -44,6 +44,8 @@
     <string name="import_">Import</string>
     <string name="synced">Synced!</string>
     <string name="loading">Loading</string>
+    <string name="fraud_ai_token_title">Fraud Ai Token</string>
+    <string name="advice_ai_token_title">Advice Ai Token</string>
     <string name="clipboard_listening">Clipboard listening</string>
     <string name="clipboard_limit">Clipboard history limit</string>
     <string name="clipboard_enable">Enable Clipboard</string>
@@ -62,6 +64,7 @@
     <string name="unpin">Unpin</string>
     <string name="delete">Delete</string>
     <string name="clipboard">Clipboard</string>
+    <string name="ai">AI</string>
     <string name="keyboard_height">Keyboard height</string>
     <string name="keyboard">Keyboard</string>
     <string name="clipboard_suggestion_timeout">Clipboard suggestion timeout</string>

@@ -265,6 +265,19 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
 
     }
 
+    inner class AI: ManagedPreferenceCategory(R.string.ai, sharedPreferences) {
+        val fraudAiToken = text(R.string.fraud_ai_token_title, "fraud_ai_token", "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")
+        val adviceAiToken = text(R.string.advice_ai_token_title, "advice_ai_token", "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")
+
+        val lastAiReqTime = ManagedPreference.PString(
+            sharedPreferences,
+            "ai_last_req_time" ,
+            "-1"
+        ).apply {
+            register()
+        }
+    }
+
     inner class Clipboard : ManagedPreferenceCategory(R.string.clipboard, sharedPreferences) {
         val clipboardListening = switch(R.string.clipboard_listening, "clipboard_enable", true)
         val clipboardHistoryLimit = int(
@@ -300,6 +313,7 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
     }
 
     val internal = Internal().register()
+    val ai = AI().register()
     val keyboard = Keyboard().register()
     val clipboard = Clipboard().register()
     val advanced = Advanced().register()

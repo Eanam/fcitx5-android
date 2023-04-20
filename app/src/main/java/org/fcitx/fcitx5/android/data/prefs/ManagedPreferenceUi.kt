@@ -8,6 +8,7 @@ import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import org.fcitx.fcitx5.android.ui.main.settings.DialogSeekBarPreference
 import org.fcitx.fcitx5.android.ui.main.settings.EditTextIntPreference
+import org.fcitx.fcitx5.android.ui.main.settings.EditTextTextPreference
 import org.fcitx.fcitx5.android.ui.main.settings.TwinSeekBarPreference
 
 abstract class ManagedPreferenceUi<T : Preference>(
@@ -84,6 +85,24 @@ abstract class ManagedPreferenceUi<T : Preference>(
             min = this@EditTextInt.min
             max = this@EditTextInt.max
             unit = this@EditTextInt.unit
+        }
+    }
+
+    class EditTextText(
+        @StringRes
+        val title: Int,
+        key: String,
+        val defaultValue: String,
+        enableUiOn: (() -> Boolean)? = null
+    ) : ManagedPreferenceUi<EditTextPreference>(key, enableUiOn) {
+        override fun createUi(context: Context) = EditTextTextPreference(context).apply {
+            key = this@EditTextText.key
+            isIconSpaceReserved = false
+            isSingleLineTitle = false
+            summaryProvider = EditTextTextPreference.SimpleSummaryProvider
+            setDefaultValue(this@EditTextText.defaultValue)
+            setTitle(this@EditTextText.title)
+            setDialogTitle(this@EditTextText.title)
         }
     }
 

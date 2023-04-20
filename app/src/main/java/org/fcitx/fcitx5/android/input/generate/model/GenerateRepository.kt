@@ -11,6 +11,7 @@ import mobi.appcent.openai.models.CreateChatCompletionRequest
 import mobi.appcent.openai.models.CreateChatCompletionResponse
 import mobi.appcent.openai.models.CreateChatCompletionResponseChoices
 import okhttp3.logging.HttpLoggingInterceptor
+import org.fcitx.fcitx5.android.data.prefs.AppPrefs
 import org.fcitx.fcitx5.android.input.generate.data.AdviceResponse
 import org.fcitx.fcitx5.android.input.generate.data.FraudResponse
 import org.fcitx.fcitx5.android.input.generate.data.IGenerateContentResponse
@@ -23,8 +24,10 @@ class GenerateRepository {
     }
 
     private val url = "https://api.openai.cztcode.com/v1"
-    private val fraudPromptToken = "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"
-    private val advicesPromptToken = "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"
+    private val fraudPromptToken: String
+        get() = AppPrefs.getInstance().ai.fraudAiToken.getValue()
+    private val advicesPromptToken: String
+        get() = AppPrefs.getInstance().ai.fraudAiToken.getValue()
     private val fraudApi by lazy {
         MyChatApi().apply {
             initApiClient(MyChatApiClient(baseUrl = url, apiKey = fraudPromptToken))

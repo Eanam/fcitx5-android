@@ -112,6 +112,20 @@ abstract class ManagedPreferenceCategory(
         return primary to secondary
     }
 
+    protected fun text(
+        @StringRes
+        title: Int,
+        key: String,
+        defaultValue: String,
+        enableUiOn: (() -> Boolean)? = null
+    ): ManagedPreference.PString {
+        val pref = ManagedPreference.PString(sharedPreferences, key, defaultValue)
+        val ui = ManagedPreferenceUi.EditTextText(title, key, defaultValue, enableUiOn)
+        pref.register()
+        ui.registerUi()
+        return pref
+    }
+
     override fun createUi(screen: PreferenceScreen) {
         val ctx = screen.context
         managedPreferencesUi.forEach {
