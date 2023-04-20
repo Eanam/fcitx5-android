@@ -1,7 +1,6 @@
 package org.fcitx.fcitx5.android.ui.main.settings
 
 import android.content.Context
-import android.text.InputType
 import androidx.preference.EditTextPreference
 
 class EditTextTextPreference(context: Context) : EditTextPreference(context) {
@@ -18,7 +17,6 @@ class EditTextTextPreference(context: Context) : EditTextPreference(context) {
     init {
         setOnBindEditTextListener {
             it.setText(currentValue)
-            it.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
         }
     }
 
